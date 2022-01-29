@@ -1,9 +1,10 @@
 import { useState } from "react";
 import styled from "styled-components";
+import { UsedKeysStatus } from "types";
 import { ArrayUtils } from "utils";
+
 import Header from "./Header";
 import Keyboard from "./Keyboard";
-
 import TileRow from "./TileRow";
 
 const GameContainer = styled.div`
@@ -22,35 +23,88 @@ const GuessContainer = styled.div`
   align-items: center;
 `;
 
+const defaultUsedKeyStatus: UsedKeysStatus = {
+  correct: [] as string[],
+  wrongPlace: [] as string[],
+  incorrect: [] as string[],
+};
+
 const NUMBER_OF_ALLOWED_GUESSES = 6;
 const DEFAULT_WORD_LENGTH = 5;
 const rows = ArrayUtils.createArray(NUMBER_OF_ALLOWED_GUESSES);
 
 const Game: React.FC = () => {
   const [guesses, setGuesses] = useState(rows);
-  const [correctKeys, setCorrectKeys] = useState("");
-  const [incorrectKeys, setIncorrectKeys] = useState("");
-  const [wrongPlaceKeys, setWrongPlaceKeys] = useState("");
+  const [usedKeyStatus, setUsedKeyStatus] = useState(defaultUsedKeyStatus);
   const [guessIndex, setGuessIndex] = useState(0);
   const [wordLength, setWordLength] = useState(DEFAULT_WORD_LENGTH);
   const [word, setWord] = useState("fiska");
   const currentGuess = guesses[guessIndex] ?? "";
+  const isCorrect = guesses.includes(word);
+
+  const setKeyStates = () => {
+    const correct = guesses.reduce(
+      (accumulated, guess) => [
+        ...accumulated,
+        ...guess
+          .split("")
+          .filter(
+            (letter, index) =>
+              !accumulated.includes(letter) && letter === word[index]
+          ),
+      ],
+      [] as string[]
+    );
+    const wrongPlace = guesses.reduce(
+      (accumulated, guess) => [
+        ...accumulated,
+        ...guess
+          .split("")
+          .filter(
+            (letter) =>
+              !accumulated.includes(letter) &&
+              word.includes(letter) &&
+              !correct.includes(letter)
+          ),
+      ],
+      [] as string[]
+    );
+    const incorrect = guesses.reduce(
+      (accumulated, guess) => [
+        ...accumulated,
+        ...guess
+          .split("")
+          .filter(
+            (letter) => !accumulated.includes(letter) && !word.includes(letter)
+          ),
+      ],
+      [] as string[]
+    );
+    setUsedKeyStatus({ correct, wrongPlace, incorrect });
+  };
 
   const handleGuessChange = (guess: string) => {
-    if (guess.length <= wordLength) {
+    if (!isCorrect && guess.length <= wordLength) {
       const updated = [...guesses];
       updated[guessIndex] = guess;
       setGuesses(updated);
     }
   };
 
+  const updateGuessStatus = () => {
+    setGuessIndex(guessIndex + 1);
+    setKeyStates();
+  };
+
   const handleEnter = () => {
     if (currentGuess.length === wordLength) {
-      if (guessIndex < NUMBER_OF_ALLOWED_GUESSES - 1) {
-        setGuessIndex(guessIndex + 1);
+      if (isCorrect) {
+        updateGuessStatus();
+      } else if (guessIndex < NUMBER_OF_ALLOWED_GUESSES - 1) {
+        updateGuessStatus();
       } else {
         // Out of guesses
-        console.log("hehe");
+        console.log("you lost, you fuck");
       }
     }
   };
@@ -72,9 +126,7 @@ const Game: React.FC = () => {
         onChange={handleGuessChange}
         onEnter={handleEnter}
         value={currentGuess}
-        correctKeys={correctKeys}
-        incorrectKeys={incorrectKeys}
-        wrongPlaceKeys={wrongPlaceKeys}
+        usedKeyStatus={usedKeyStatus}
       />
     </GameContainer>
   );

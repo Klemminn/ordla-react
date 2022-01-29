@@ -23,7 +23,7 @@ const TileRow: React.FC<TileRowProps> = ({ flipped, word, letters }) => {
 
   useEffect(() => {
     if (flipped) {
-      let parsedWord = word.toUpperCase();
+      let parsedWord = word;
       const updated = letters
         .split("")
         .map((letter, index) => {

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 
 import styled from "styled-components";
+import { UsedKeysStatus } from "types";
 import Text from "./Text";
 
 const InputContainer = styled.div`
@@ -15,10 +16,10 @@ const Input = styled.input`
 `;
 
 const keyRows = [
-  ["Á", "É", "Í", "Ó", "Ú", "Ý", "Ö"],
-  ["E", "R", "T", "Y", "U", "I", "O", "P", "Ð"],
-  ["A", "S", "D", "F", "G", "H", "J", "K", "L", "Æ"],
-  ["ENTER", "X", "V", "B", "N", "M", "Þ", "BACKSPACE"],
+  ["á", "é", "í", "ó", "ú", "ý", "ö"],
+  ["e", "r", "t", "y", "u", "i", "o", "p", "ð"],
+  ["a", "s", "d", "f", "g", "h", "j", "k", "l", "æ"],
+  ["enter", "x", "v", "b", "n", "m", "þ", "backspace"],
 ];
 
 const validKeys = keyRows.reduce(
@@ -52,18 +53,14 @@ const KeyButton = styled.button`
 type KeyboardProps = {
   onChange(value: string): void;
   onEnter(): void;
-  correctKeys: string;
-  incorrectKeys: string;
-  wrongPlaceKeys: string;
+  usedKeyStatus: UsedKeysStatus;
   value: string;
 };
 
 const Keyboard: React.FC<KeyboardProps> = ({
   onChange,
   onEnter,
-  correctKeys,
-  incorrectKeys,
-  wrongPlaceKeys,
+  usedKeyStatus,
   value,
 }) => {
   const input = useRef<HTMLInputElement>(null);
@@ -73,9 +70,9 @@ const Keyboard: React.FC<KeyboardProps> = ({
   }, []);
 
   const handleChange = (key: string) => {
-    if (key === "ENTER") {
+    if (key === "enter") {
       onEnter();
-    } else if (key === "BACKSPACE" && value.length) {
+    } else if (key === "backspace" && value.length) {
       const newValue = value.substring(0, value.length - 1);
       onChange(newValue);
     } else if (validKeys.includes(key)) {
@@ -94,8 +91,8 @@ const Keyboard: React.FC<KeyboardProps> = ({
             const newValue = e.target.value;
             handleChange(
               value.length > newValue.length
-                ? "BACKSPACE"
-                : e.target.value.slice(-1).toUpperCase()
+                ? "backspace"
+                : e.target.value.slice(-1)
             );
           }}
           onKeyUp={(e) => {

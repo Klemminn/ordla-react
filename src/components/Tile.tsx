@@ -11,7 +11,7 @@ type TileContainerProps = {
   tileState: TileState;
 };
 
-const FLIP_TIME = 0.6;
+const FLIP_TIME = 0.7;
 
 const TileContainer = styled(Text)<TileContainerProps>`
   display: flex;
@@ -56,7 +56,7 @@ const Tile: React.FC<TileProps> = ({ index, letter, tileState }) => {
     if (tileState !== undefined && tileState !== "default") {
       setTimeout(() => {
         setDelayedTileState(tileState);
-      }, index * FLIP_TIME * 1000);
+      }, index * FLIP_TIME ** 2 * 1000);
     }
     // eslint-disable-next-line
   }, [tileState]);
