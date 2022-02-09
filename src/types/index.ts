@@ -1,4 +1,4 @@
-export type TileState = "default" | "correct" | "incorrect" | "wrongPlace";
+export type KeyStatus = "default" | "correct" | "incorrect" | "wrongPlace";
 
 export type UsedKeysStatus = {
   correct: string[];

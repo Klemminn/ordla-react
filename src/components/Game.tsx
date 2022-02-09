@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { flipTime } from "settings";
 import styled from "styled-components";
+
 import { UsedKeysStatus } from "types";
-import { ArrayUtils } from "utils";
+import { DateUtils, ToastUtils } from "utils";
+import { GameState } from "states";
 
 import Header from "./Header";
 import Keyboard from "./Keyboard";
@@ -29,20 +32,51 @@ const defaultUsedKeyStatus: UsedKeysStatus = {
   incorrect: [] as string[],
 };
 
-const NUMBER_OF_ALLOWED_GUESSES = 6;
-const DEFAULT_WORD_LENGTH = 5;
-const rows = ArrayUtils.createArray(NUMBER_OF_ALLOWED_GUESSES);
+const congratulationStrings = [
+  "Snillingur!",
+  "Framúrskarandi!",
+  "Frábært!",
+  "Vel gert!",
+  "Engin pressa!",
+  "Hjúkket!",
+];
 
 const Game: React.FC = () => {
-  const [guesses, setGuesses] = useState(rows);
+  const gameState = GameState.useState();
+  const currentGame = gameState.getGameState();
+  const guesses = currentGame.guesses;
+  const wordLength = gameState.getWordLength();
+  const stateDaysFromLaunch = gameState.getDaysFromLaunch();
+  const solution = useRef("");
+  const allowedWords = useRef<string[]>([]);
   const [usedKeyStatus, setUsedKeyStatus] = useState(defaultUsedKeyStatus);
   const [guessIndex, setGuessIndex] = useState(0);
-  const [wordLength, setWordLength] = useState(DEFAULT_WORD_LENGTH);
-  const [word, setWord] = useState("fiska");
-  const currentGuess = guesses[guessIndex] ?? "";
-  const isCorrect = guesses.includes(word);
+  const currentGuess = guesses[guessIndex];
+  const isFinished =
+    guesses[guessIndex - 1] === solution.current ||
+    guesses.length <= guessIndex;
 
-  const setKeyStates = () => {
+  useEffect(() => {
+    handleWordLengthChange(wordLength);
+    // eslint-disable-next-line
+  }, [wordLength]);
+
+  const handleWordLengthChange = async (length: number) => {
+    allowedWords.current = await require(`data/${length}letter`);
+    const solutions = await require(`data/${length}solutions`);
+    const daysFromLaunch = DateUtils.getDaysFromLaunch();
+    if (daysFromLaunch !== stateDaysFromLaunch) {
+      gameState.setDaysFromLaunch(daysFromLaunch);
+    }
+    solution.current = solutions[daysFromLaunch];
+    const index = guesses.findIndex(
+      (guess) => !allowedWords.current.includes(guess)
+    );
+    setGuessIndex(index >= 0 ? index : guesses.length);
+    setKeyStatuses();
+  };
+
+  const setKeyStatuses = () => {
     const correct = guesses.reduce(
       (accumulated, guess) => [
         ...accumulated,
@@ -50,7 +84,8 @@ const Game: React.FC = () => {
           .split("")
           .filter(
             (letter, index) =>
-              !accumulated.includes(letter) && letter === word[index]
+              !accumulated.includes(letter) &&
+              letter === solution.current[index]
           ),
       ],
       [] as string[]
@@ -63,7 +98,7 @@ const Game: React.FC = () => {
           .filter(
             (letter) =>
               !accumulated.includes(letter) &&
-              word.includes(letter) &&
+              solution.current.includes(letter) &&
               !correct.includes(letter)
           ),
       ],
@@ -75,7 +110,9 @@ const Game: React.FC = () => {
         ...guess
           .split("")
           .filter(
-            (letter) => !accumulated.includes(letter) && !word.includes(letter)
+            (letter) =>
+              !accumulated.includes(letter) &&
+              !solution.current.includes(letter)
           ),
       ],
       [] as string[]
@@ -84,27 +121,47 @@ const Game: React.FC = () => {
   };
 
   const handleGuessChange = (guess: string) => {
-    if (!isCorrect && guess.length <= wordLength) {
+    if (!isFinished && guess.length <= wordLength) {
       const updated = [...guesses];
       updated[guessIndex] = guess;
-      setGuesses(updated);
+      gameState.setGuesses(updated);
     }
+  };
+
+  const runAfterFlip = (callback: Function) => {
+    setTimeout(() => {
+      callback();
+    }, flipTime * 1000 * (wordLength - 1));
   };
 
   const updateGuessStatus = () => {
     setGuessIndex(guessIndex + 1);
-    setKeyStates();
+    runAfterFlip(setKeyStatuses);
   };
 
   const handleEnter = () => {
-    if (currentGuess.length === wordLength) {
-      if (isCorrect) {
-        updateGuessStatus();
-      } else if (guessIndex < NUMBER_OF_ALLOWED_GUESSES - 1) {
-        updateGuessStatus();
+    if (!isFinished) {
+      if (currentGuess.length === wordLength) {
+        if (allowedWords.current.includes(currentGuess)) {
+          if (currentGuess === solution.current) {
+            runAfterFlip(() =>
+              ToastUtils.infinite(congratulationStrings[guessIndex])
+            );
+            gameState.updateStatistics(
+              (guessIndex + 1) as GameState.NumberOfGuesses
+            );
+          } else if (guessIndex === guesses.length - 1) {
+            ToastUtils.show(solution.current.toUpperCase());
+            gameState.updateStatistics("failed");
+          }
+          updateGuessStatus();
+        } else {
+          ToastUtils.show(
+            `${currentGuess.toUpperCase()} er ekki í orðaforðanum okkar`
+          );
+        }
       } else {
-        // Out of guesses
-        console.log("you lost, you fuck");
+        ToastUtils.show("Ekki nægilega margir stafir");
       }
     }
   };
@@ -112,12 +169,18 @@ const Game: React.FC = () => {
   return (
     <GameContainer>
       <Header />
+      <div
+        style={{ color: "white", backgroundColor: "red" }}
+        onClick={() => gameState.setWordLength(wordLength === 5 ? 6 : 5)}
+      >
+        +
+      </div>
       <GuessContainer>
         {guesses.map((guess, index) => (
           <TileRow
             flipped={guessIndex > index}
             letters={guess}
-            word={word}
+            solution={solution.current}
             key={index}
           />
         ))}

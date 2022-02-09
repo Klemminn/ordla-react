@@ -1,7 +1,8 @@
-import { Game, ThemeContainer } from "components";
+import { Game, ThemeContainer, Toaster } from "components";
 
 const App: React.FC = () => (
   <ThemeContainer>
+    <Toaster />
     <Game />
   </ThemeContainer>
 );

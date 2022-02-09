@@ -1,8 +1,10 @@
 import { useEffect, useRef } from "react";
+import styled, { useTheme } from "styled-components";
 
-import styled from "styled-components";
-import { UsedKeysStatus } from "types";
+import { Colors } from "style";
+import { UsedKeysStatus, KeyStatus } from "types";
 import Text from "./Text";
+import { Icons } from "components";
 
 const InputContainer = styled.div`
   height: 0;
@@ -16,10 +18,10 @@ const Input = styled.input`
 `;
 
 const keyRows = [
-  ["á", "é", "í", "ó", "ú", "ý", "ö"],
+  ["á", "é", "í", "ó", "ú", "ý", "ö", "backspace"],
   ["e", "r", "t", "y", "u", "i", "o", "p", "ð"],
   ["a", "s", "d", "f", "g", "h", "j", "k", "l", "æ"],
-  ["enter", "x", "v", "b", "n", "m", "þ", "backspace"],
+  ["enter", "x", "v", "b", "n", "m", "þ"],
 ];
 
 const validKeys = keyRows.reduce(
@@ -40,15 +42,35 @@ const RowContainer = styled.div`
   }
 `;
 
-const KeyButton = styled.button`
+type KeyButtonProps = {
+  usedStatus: KeyStatus;
+};
+
+const KeyButton = styled.button<KeyButtonProps>`
   flex: 1;
   border: 0;
   padding: 0.5rem;
   margin: 0 0.3rem 0.3rem 0;
   height: 3rem;
   border-radius: 4px;
-  background-color: ${({ theme }) => theme.keyBackground};
+  background-color: ${({ theme, usedStatus }) =>
+    usedStatus === "correct"
+      ? Colors.Success
+      : usedStatus === "incorrect"
+      ? theme.tone4
+      : usedStatus === "wrongPlace"
+      ? Colors.Warning
+      : theme.keyBackground};
 `;
+
+const getUsedStatus = (key: string, usedKeyStatus: UsedKeysStatus): KeyStatus =>
+  usedKeyStatus.correct.includes(key)
+    ? "correct"
+    : usedKeyStatus.wrongPlace.includes(key)
+    ? "wrongPlace"
+    : usedKeyStatus.incorrect.includes(key)
+    ? "incorrect"
+    : "default";
 
 type KeyboardProps = {
   onChange(value: string): void;
@@ -64,6 +86,9 @@ const Keyboard: React.FC<KeyboardProps> = ({
   value,
 }) => {
   const input = useRef<HTMLInputElement>(null);
+  const theme = useTheme();
+
+  const iconFill = theme.tone1;
 
   useEffect(() => {
     input.current?.focus();
@@ -86,7 +111,7 @@ const Keyboard: React.FC<KeyboardProps> = ({
         <Input
           ref={input}
           onBlur={() => input.current?.focus()}
-          value={value}
+          value={value ?? ""}
           onChange={(e) => {
             const newValue = e.target.value;
             handleChange(
@@ -105,9 +130,19 @@ const Keyboard: React.FC<KeyboardProps> = ({
       {keyRows.map((row) => (
         <RowContainer key={row[0]}>
           {row.map((key) => (
-            <KeyButton key={key} onClick={() => handleChange(key)}>
-              <Text size={1.2} weight={600}>
-                {key}
+            <KeyButton
+              key={key}
+              onClick={() => handleChange(key)}
+              usedStatus={getUsedStatus(key, usedKeyStatus)}
+            >
+              <Text size={0.9} weight={600}>
+                {key === "enter" ? (
+                  "giska"
+                ) : key === "backspace" ? (
+                  <Icons.Backspace fill={iconFill} />
+                ) : (
+                  key
+                )}
               </Text>
             </KeyButton>
           ))}

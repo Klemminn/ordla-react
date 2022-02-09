@@ -3,15 +3,15 @@ import styled from "styled-components";
 import CardFlip from "react-card-flip";
 
 import { Colors } from "style";
-import { TileState } from "types";
+import { KeyStatus } from "types";
+import { flipTime } from "settings";
 
 import Text from "./Text";
 
 type TileContainerProps = {
-  tileState: TileState;
+  tileStatus: KeyStatus;
+  letter?: string;
 };
-
-const FLIP_TIME = 0.7;
 
 const TileContainer = styled(Text)<TileContainerProps>`
   display: flex;
@@ -21,16 +21,20 @@ const TileContainer = styled(Text)<TileContainerProps>`
   height: 4rem;
   margin: 0.3rem;
 
-  ${({ theme, tileState }) => {
+  ${({ theme, tileStatus, letter }) => {
     const backgroundColor =
-      tileState === "correct"
+      tileStatus === "correct"
         ? Colors.Success
-        : tileState === "incorrect"
-        ? theme.tone6
-        : tileState === "wrongPlace"
+        : tileStatus === "incorrect"
+        ? theme.tone4
+        : tileStatus === "wrongPlace"
         ? Colors.Warning
         : theme.tone7;
-    const borderColor = tileState === "default" ? theme.tone4 : backgroundColor;
+    const borderColor = letter?.length
+      ? theme.tone2
+      : tileStatus === "default"
+      ? theme.tone4
+      : backgroundColor;
     return `
       background-color: ${backgroundColor};
       border: 2px solid ${borderColor};
@@ -44,32 +48,36 @@ TileContainer.defaultProps = {
 
 type TileProps = {
   letter: string;
-  tileState: TileState;
+  tileStatus: KeyStatus;
   index: number;
 };
 
-const Tile: React.FC<TileProps> = ({ index, letter, tileState }) => {
+const Tile: React.FC<TileProps> = ({ index, letter, tileStatus }) => {
   const [delayedTileState, setDelayedTileState] =
-    useState<TileState>("default");
+    useState<KeyStatus>("default");
 
   useEffect(() => {
-    if (tileState !== undefined && tileState !== "default") {
+    if (tileStatus !== undefined && tileStatus !== "default") {
       setTimeout(() => {
-        setDelayedTileState(tileState);
-      }, index * FLIP_TIME ** 2 * 1000);
+        setDelayedTileState(tileStatus);
+      }, index * flipTime ** 2 * 1000);
+    } else {
+      setDelayedTileState(tileStatus);
     }
     // eslint-disable-next-line
-  }, [tileState]);
+  }, [tileStatus]);
 
   return (
     <CardFlip
       isFlipped={delayedTileState !== "default"}
       flipDirection="vertical"
-      flipSpeedFrontToBack={FLIP_TIME}
-      flipSpeedBackToFront={FLIP_TIME}
+      flipSpeedFrontToBack={flipTime}
+      flipSpeedBackToFront={flipTime}
     >
-      <TileContainer tileState={delayedTileState}>{letter}</TileContainer>
-      <TileContainer tileState={delayedTileState}>{letter}</TileContainer>
+      <TileContainer tileStatus={delayedTileState} letter={letter}>
+        {letter}
+      </TileContainer>
+      <TileContainer tileStatus={delayedTileState}>{letter}</TileContainer>
     </CardFlip>
   );
 };

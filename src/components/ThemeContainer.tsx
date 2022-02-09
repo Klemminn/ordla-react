@@ -17,16 +17,16 @@ const GlobalStyle = createGlobalStyle`
     height: 100%;
   }
 
-  @media (max-width: 500px) {
-  html {
-    font-size: 70%;
+  @media (max-width: 530px) {
+    html {
+      font-size: 55%;
+    }
   }
-}
-@media (min-width: 1400px) {
-  html {
-    font-size: 100%;
+  @media (min-width: 1400px) {
+    html {
+      font-size: 100%;
+    }
   }
-}
 `;
 
 const ThemeContainer: React.FC = (props) => {

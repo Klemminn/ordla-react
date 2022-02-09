@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 
 import { ArrayUtils } from "utils";
-import { TileState } from "types";
+import { KeyStatus } from "types";
 
 import Tile from "./Tile";
 
@@ -12,18 +12,20 @@ const RowContainer = styled.div`
 
 type TileRowProps = {
   flipped: boolean;
-  word: string;
+  solution: string;
   letters: string;
 };
 
-const TileRow: React.FC<TileRowProps> = ({ flipped, word, letters }) => {
-  const [tileStates, setTileStates] = useState(
-    ArrayUtils.createArray(word.length).map(() => "default")
-  );
+const TileRow: React.FC<TileRowProps> = ({ flipped, solution, letters }) => {
+  const [tileStates, setTileStates] = useState(["default"]);
+
+  useEffect(() => {
+    setTileStates(ArrayUtils.createArray(solution.length).map(() => "default"));
+  }, [solution]);
 
   useEffect(() => {
     if (flipped) {
-      let parsedWord = word;
+      let parsedWord = solution;
       const updated = letters
         .split("")
         .map((letter, index) => {
@@ -56,7 +58,7 @@ const TileRow: React.FC<TileRowProps> = ({ flipped, word, letters }) => {
         <Tile
           letter={letters[index] ?? ""}
           key={index}
-          tileState={state as TileState}
+          tileStatus={state as KeyStatus}
           index={index}
         />
       ))}
