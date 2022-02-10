@@ -147,8 +147,6 @@ const Game: React.FC = () => {
     }, 600);
   };
 
-  console.log(solution.current);
-
   const isHardModeValid = () => {
     if (isHardMode && guessIndex > 0) {
       const previousGuess = guesses[guessIndex - 1];
