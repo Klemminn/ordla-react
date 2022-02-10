@@ -1,9 +1,12 @@
 import styled, { useTheme } from "styled-components";
 
-import { Icons, Text } from "components";
+import { ModalsState } from "states";
+import * as Icons from "./Icons";
+import Text from "./Text";
 
 const HeaderContainer = styled.div`
   display: flex;
+  height: 4rem;
   justify-content: space-between;
   align-items: center;
   width: 100%;
@@ -19,6 +22,7 @@ const HeaderContainer = styled.div`
 const GroupContainer = styled.div`
   display: flex;
   flex: 1;
+  justify-content: center;
 `;
 
 const IconGroupContainer = styled(GroupContainer)`
@@ -33,7 +37,7 @@ const Header: React.FC = () => {
   return (
     <HeaderContainer>
       <GroupContainer>
-        <Icons.QuestionMark fill={iconFill} />
+        {/*<Icons.QuestionMark fill={iconFill} />*/}
       </GroupContainer>
       <GroupContainer>
         <Text size={2.3} weight={700} spread>
@@ -41,8 +45,14 @@ const Header: React.FC = () => {
         </Text>
       </GroupContainer>
       <IconGroupContainer>
-        <Icons.Chart fill={iconFill} />
-        <Icons.Cog fill={iconFill} />
+        <Icons.Chart
+          fill={iconFill}
+          onClick={() => ModalsState.accessState().openModal("statistics")}
+        />
+        <Icons.Cog
+          fill={iconFill}
+          onClick={() => ModalsState.accessState().openModal("settings")}
+        />
       </IconGroupContainer>
     </HeaderContainer>
   );

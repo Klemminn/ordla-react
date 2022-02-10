@@ -3,6 +3,7 @@ import { Colors } from "./Colors";
 
 declare module "styled-components" {
   export interface DefaultTheme {
+    absentBackground: Colors;
     keyBackground: Colors;
     tone1: Colors;
     tone2: Colors;
@@ -15,6 +16,7 @@ declare module "styled-components" {
 }
 
 export const LightTheme: DefaultTheme = {
+  absentBackground: Colors.LightTone2,
   keyBackground: Colors.LightTone4,
   tone1: Colors.LightTone1,
   tone2: Colors.LightTone2,
@@ -26,6 +28,7 @@ export const LightTheme: DefaultTheme = {
 };
 
 export const DarkTheme: DefaultTheme = {
+  absentBackground: Colors.DarkTone4,
   keyBackground: Colors.DarkTone2,
   tone1: Colors.DarkTone1,
   tone2: Colors.DarkTone2,

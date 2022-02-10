@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { flipTime } from "settings";
+import { flipTime } from "const";
 import styled from "styled-components";
 
 import { UsedKeysStatus } from "types";
-import { DateUtils, ToastUtils } from "utils";
+import { getDaysFromLaunch, toast } from "utils";
 import { GameState } from "states";
 
 import Header from "./Header";
 import Keyboard from "./Keyboard";
 import TileRow from "./TileRow";
+import LengthSelector from "./LengthSelector";
 
 const GameContainer = styled.div`
   display: flex;
@@ -45,16 +46,15 @@ const Game: React.FC = () => {
   const gameState = GameState.useState();
   const currentGame = gameState.getGameState();
   const guesses = currentGame.guesses;
+  const isFinished = currentGame.isFinished;
   const wordLength = gameState.getWordLength();
   const stateDaysFromLaunch = gameState.getDaysFromLaunch();
   const solution = useRef("");
   const allowedWords = useRef<string[]>([]);
   const [usedKeyStatus, setUsedKeyStatus] = useState(defaultUsedKeyStatus);
   const [guessIndex, setGuessIndex] = useState(0);
+  const [shake, setShake] = useState(false);
   const currentGuess = guesses[guessIndex];
-  const isFinished =
-    guesses[guessIndex - 1] === solution.current ||
-    guesses.length <= guessIndex;
 
   useEffect(() => {
     handleWordLengthChange(wordLength);
@@ -64,11 +64,11 @@ const Game: React.FC = () => {
   const handleWordLengthChange = async (length: number) => {
     allowedWords.current = await require(`data/${length}letter`);
     const solutions = await require(`data/${length}solutions`);
-    const daysFromLaunch = DateUtils.getDaysFromLaunch();
-    if (daysFromLaunch !== stateDaysFromLaunch) {
-      gameState.setDaysFromLaunch(daysFromLaunch);
-    }
+    const daysFromLaunch = getDaysFromLaunch();
     solution.current = solutions[daysFromLaunch];
+    if (daysFromLaunch !== stateDaysFromLaunch) {
+      gameState.resetGame();
+    }
     const index = guesses.findIndex(
       (guess) => !allowedWords.current.includes(guess)
     );
@@ -139,29 +139,35 @@ const Game: React.FC = () => {
     runAfterFlip(setKeyStatuses);
   };
 
+  const handleFailure = (message: string) => {
+    toast(message);
+    setShake(true);
+    setTimeout(() => {
+      setShake(false);
+    }, 600);
+  };
+
   const handleEnter = () => {
     if (!isFinished) {
       if (currentGuess.length === wordLength) {
         if (allowedWords.current.includes(currentGuess)) {
           if (currentGuess === solution.current) {
-            runAfterFlip(() =>
-              ToastUtils.infinite(congratulationStrings[guessIndex])
-            );
+            runAfterFlip(() => toast(congratulationStrings[guessIndex]));
             gameState.updateStatistics(
               (guessIndex + 1) as GameState.NumberOfGuesses
             );
           } else if (guessIndex === guesses.length - 1) {
-            ToastUtils.show(solution.current.toUpperCase());
+            toast(solution.current.toUpperCase());
             gameState.updateStatistics("failed");
           }
           updateGuessStatus();
         } else {
-          ToastUtils.show(
+          handleFailure(
             `${currentGuess.toUpperCase()} er ekki í orðaforðanum okkar`
           );
         }
       } else {
-        ToastUtils.show("Ekki nægilega margir stafir");
+        handleFailure("Ekki nægilega margir stafir");
       }
     }
   };
@@ -169,19 +175,15 @@ const Game: React.FC = () => {
   return (
     <GameContainer>
       <Header />
-      <div
-        style={{ color: "white", backgroundColor: "red" }}
-        onClick={() => gameState.setWordLength(wordLength === 5 ? 6 : 5)}
-      >
-        +
-      </div>
+      <LengthSelector />
       <GuessContainer>
         {guesses.map((guess, index) => (
           <TileRow
             flipped={guessIndex > index}
             letters={guess}
             solution={solution.current}
-            key={index}
+            shake={guessIndex === index && shake}
+            key={`${solution.current}${index}`}
           />
         ))}
       </GuessContainer>

@@ -1,6 +1,7 @@
 export enum Colors {
-  Warning = "#B59F3B",
-  Success = "#538D4E",
+  White = "#FFFFFF",
+  Warning = "#C9B458",
+  Success = "#6AAA64",
   DarkTone1 = "#D7DADC",
   DarkTone2 = "#818384",
   DarkTone3 = "#565758",

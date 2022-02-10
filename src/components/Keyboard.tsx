@@ -52,12 +52,12 @@ const KeyButton = styled.button<KeyButtonProps>`
   padding: 0.5rem;
   margin: 0 0.3rem 0.3rem 0;
   height: 3rem;
-  border-radius: 4px;
+  border-radius: 0.2rem;
   background-color: ${({ theme, usedStatus }) =>
     usedStatus === "correct"
       ? Colors.Success
       : usedStatus === "incorrect"
-      ? theme.tone4
+      ? theme.absentBackground
       : usedStatus === "wrongPlace"
       ? Colors.Warning
       : theme.keyBackground};
@@ -129,23 +129,30 @@ const Keyboard: React.FC<KeyboardProps> = ({
       </InputContainer>
       {keyRows.map((row) => (
         <RowContainer key={row[0]}>
-          {row.map((key) => (
-            <KeyButton
-              key={key}
-              onClick={() => handleChange(key)}
-              usedStatus={getUsedStatus(key, usedKeyStatus)}
-            >
-              <Text size={0.9} weight={600}>
-                {key === "enter" ? (
-                  "giska"
-                ) : key === "backspace" ? (
-                  <Icons.Backspace fill={iconFill} />
-                ) : (
-                  key
-                )}
-              </Text>
-            </KeyButton>
-          ))}
+          {row.map((key) => {
+            const usedStatus = getUsedStatus(key, usedKeyStatus);
+            return (
+              <KeyButton
+                key={key}
+                onClick={() => handleChange(key)}
+                usedStatus={usedStatus}
+              >
+                <Text
+                  size={0.9}
+                  weight={600}
+                  color={usedStatus !== "default" ? Colors.White : undefined}
+                >
+                  {key === "enter" ? (
+                    "giska"
+                  ) : key === "backspace" ? (
+                    <Icons.Backspace fill={iconFill} />
+                  ) : (
+                    key
+                  )}
+                </Text>
+              </KeyButton>
+            );
+          })}
         </RowContainer>
       ))}
     </KeyboardContainer>

@@ -4,7 +4,7 @@ import CardFlip from "react-card-flip";
 
 import { Colors } from "style";
 import { KeyStatus } from "types";
-import { flipTime } from "settings";
+import { flipTime } from "const";
 
 import Text from "./Text";
 
@@ -26,7 +26,7 @@ const TileContainer = styled(Text)<TileContainerProps>`
       tileStatus === "correct"
         ? Colors.Success
         : tileStatus === "incorrect"
-        ? theme.tone4
+        ? theme.tone3
         : tileStatus === "wrongPlace"
         ? Colors.Warning
         : theme.tone7;
@@ -35,11 +35,40 @@ const TileContainer = styled(Text)<TileContainerProps>`
       : tileStatus === "default"
       ? theme.tone4
       : backgroundColor;
+    const fontColor = tileStatus !== "default" ? "white" : theme.tone1;
     return `
+      color: ${fontColor};
       background-color: ${backgroundColor};
       border: 2px solid ${borderColor};
     `;
   }}
+
+  &.bounce {
+    animation-name: Bounce;
+    animation-duration: 600ms;
+  }
+
+  @keyframes Bounce {
+    0%,
+    20% {
+      transform: translateY(0);
+    }
+    40% {
+      transform: translateY(-30px);
+    }
+    50% {
+      transform: translateY(5px);
+    }
+    60% {
+      transform: translateY(-15px);
+    }
+    80% {
+      transform: translateY(2px);
+    }
+    100% {
+      transform: translateY(0);
+    }
+  }
 `;
 TileContainer.defaultProps = {
   size: 2,
@@ -50,17 +79,31 @@ type TileProps = {
   letter: string;
   tileStatus: KeyStatus;
   index: number;
+  bounce: boolean;
+  wordLength: number;
 };
 
-const Tile: React.FC<TileProps> = ({ index, letter, tileStatus }) => {
+const flipDelay = flipTime ** 3 * 1000;
+
+const Tile: React.FC<TileProps> = ({
+  index,
+  letter,
+  tileStatus,
+  bounce,
+  wordLength,
+}) => {
   const [delayedTileState, setDelayedTileState] =
     useState<KeyStatus>("default");
+  const [delayedBounce, setDelayedBounce] = useState(false);
 
   useEffect(() => {
     if (tileStatus !== undefined && tileStatus !== "default") {
       setTimeout(() => {
         setDelayedTileState(tileStatus);
-      }, index * flipTime ** 2 * 1000);
+        setTimeout(() => {
+          setDelayedBounce(bounce);
+        }, wordLength * flipDelay);
+      }, index * flipDelay);
     } else {
       setDelayedTileState(tileStatus);
     }
@@ -77,7 +120,12 @@ const Tile: React.FC<TileProps> = ({ index, letter, tileStatus }) => {
       <TileContainer tileStatus={delayedTileState} letter={letter}>
         {letter}
       </TileContainer>
-      <TileContainer tileStatus={delayedTileState}>{letter}</TileContainer>
+      <TileContainer
+        className={delayedBounce ? "bounce" : ""}
+        tileStatus={delayedTileState}
+      >
+        {letter}
+      </TileContainer>
     </CardFlip>
   );
 };

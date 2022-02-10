@@ -1,23 +1,28 @@
 import { createState, useState as useHookState, State } from "@hookstate/core";
 import { Persistence } from "@hookstate/persistence";
+import { getDaysFromLaunch } from "utils";
+
+export type Statistics = {
+  currentStreak: number;
+  maxStreak: number;
+  gamesPlayed: number;
+  gamesWon: number;
+  numberOfGuesses: {
+    1: number;
+    2: number;
+    3: number;
+    4: number;
+    5: number;
+    6: number;
+    failed: number;
+  };
+};
 
 type LengthState = {
+  isFinished: boolean;
+  correctGuess: number;
   guesses: string[];
-  statistics: {
-    currentStreak: number;
-    maxStreak: number;
-    gamesPlayed: number;
-    gamesWon: number;
-    numberOfGuesses: {
-      1: number;
-      2: number;
-      3: number;
-      4: number;
-      5: number;
-      6: number;
-      failed: number;
-    };
-  };
+  statistics: Statistics;
 };
 
 export type NumberOfGuesses =
@@ -34,6 +39,8 @@ export type GameState = {
 const getDefaultGuesses = () => ["", "", "", "", "", ""];
 
 const getDefaultLengthState = (): LengthState => ({
+  isFinished: false,
+  correctGuess: -1,
   guesses: getDefaultGuesses(),
   statistics: {
     currentStreak: 0,
@@ -60,6 +67,13 @@ const getDefaultState = (): GameState => ({
   7: getDefaultLengthState(),
 });
 
+const getResetLengthState = (lengthState: LengthState) => ({
+  ...lengthState,
+  isFinished: false,
+  correctGuess: -1,
+  guesses: getDefaultGuesses(),
+});
+
 const gameState = createState<GameState>(getDefaultState());
 const persistenceStateKey = "gameState";
 gameState.attach(Persistence(persistenceStateKey));
@@ -68,13 +82,19 @@ const wrapState = (s: State<GameState>) => ({
   getGameState: () => s.value[s.value.wordLength],
   getWordLength: () => s.value.wordLength,
   getDaysFromLaunch: () => s.value.daysFromLaunch,
+  getIsFinished: (length: GameState["wordLength"]) =>
+    s.value[length].isFinished,
 
   setWordLength: s.wordLength.set,
-  setDaysFromLaunch: (daysFromLaunch: GameState["daysFromLaunch"]) => {
-    s.merge(() => ({ daysFromLaunch }));
-    s["5"].merge(() => ({ guesses: getDefaultGuesses() }));
-    s["6"].merge(() => ({ guesses: getDefaultGuesses() }));
-    s["7"].merge(() => ({ guesses: getDefaultGuesses() }));
+  resetGame: () => {
+    const daysFromLaunch = getDaysFromLaunch();
+    const clone = JSON.parse(JSON.stringify(s.value));
+    clone.daysFromLaunch = daysFromLaunch;
+    clone.currentStreak = 0;
+    clone["5"] = getResetLengthState(clone["5"]);
+    clone["6"] = getResetLengthState(clone["6"]);
+    clone["7"] = getResetLengthState(clone["7"]);
+    s.set(clone);
   },
   setGuesses: (guesses: LengthState["guesses"]) =>
     s.merge((current) => ({
@@ -101,7 +121,12 @@ const wrapState = (s: State<GameState>) => ({
       statistics.gamesPlayed += 1;
 
       return {
-        [s.value.wordLength]: { ...current[s.value.wordLength], statistics },
+        [s.value.wordLength]: {
+          ...current[s.value.wordLength],
+          isFinished: true,
+          correctGuess: numberOfGuesses !== "failed" ? numberOfGuesses : -1,
+          statistics,
+        },
       };
     }),
 });
