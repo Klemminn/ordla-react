@@ -17,7 +17,8 @@ type ButtonProps = {
 };
 
 const Button = styled.button<ButtonProps>`
-  width: 10rem;
+  flex: 1;
+  margin: 0 0.5rem;
   height: 4rem;
   border: none;
   border-radius: 0.5rem;
