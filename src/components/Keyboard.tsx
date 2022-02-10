@@ -21,7 +21,7 @@ const keyRows = [
   ["á", "é", "í", "ó", "ú", "ý", "ö", "backspace"],
   ["e", "r", "t", "y", "u", "i", "o", "p", "ð"],
   ["a", "s", "d", "f", "g", "h", "j", "k", "l", "æ"],
-  ["enter", "x", "v", "b", "n", "m", "þ"],
+  ["x", "v", "b", "n", "m", "þ", "enter"],
 ];
 
 const validKeys = keyRows.reduce(
