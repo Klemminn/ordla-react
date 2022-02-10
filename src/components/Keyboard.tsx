@@ -139,7 +139,7 @@ const Keyboard: React.FC<KeyboardProps> = ({
                 usedStatus={usedStatus}
               >
                 <Text
-                  size={0.9}
+                  size={1.3}
                   weight={600}
                   color={usedStatus !== "default" ? Colors.White : undefined}
                 >
