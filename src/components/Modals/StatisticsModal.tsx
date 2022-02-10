@@ -138,13 +138,13 @@ const StatisticsModal: React.FC<ModalProps> = (props) => {
     const title = `Orðla ${daysFromLaunch + 1} ${usedRows.length}/6`;
     const footer = "https://ordla.is";
     const whole = `${title}\n\n${rowStrings.join("\n")}\n\n${footer}`;
+    const shareData: ShareData = {
+      title,
+      text: whole,
+      url: footer,
+    };
     if (navigator.canShare()) {
-      const shareDate: ShareData = {
-        title,
-        text: whole,
-        url: footer,
-      };
-      navigator.share(shareDate);
+      navigator.share(shareData);
     } else {
       navigator.clipboard.writeText(whole);
       toast("Afritað í klemmuspjald");
