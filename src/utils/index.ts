@@ -3,7 +3,7 @@ import reactHotToast from "react-hot-toast";
 export const createArray = (length: number) =>
   Array(length).join(".").split(".");
 
-const LAUNCH_MILLISECONDS = 1644364800000;
+const LAUNCH_MILLISECONDS = 1644451200000;
 
 export const getDaysFromLaunch = () => {
   const currentDate = new Date();
@@ -43,4 +43,10 @@ export const getRowStates = (row: string, solution: string) => {
       }
       return "incorrect";
     });
+};
+
+export const getSolution = async (wordLength: number) => {
+  const daysFromLaunch = getDaysFromLaunch();
+  const solutions = await require(`data/${wordLength}solutions`);
+  return solutions[daysFromLaunch % solutions.length];
 };

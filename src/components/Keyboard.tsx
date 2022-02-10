@@ -51,7 +51,7 @@ const KeyButton = styled.button<KeyButtonProps>`
   border: 0;
   padding: 0.5rem;
   margin: 0 0.3rem 0.3rem 0;
-  height: 3rem;
+  height: 4rem;
   border-radius: 0.2rem;
   background-color: ${({ theme, usedStatus }) =>
     usedStatus === "correct"
@@ -125,6 +125,7 @@ const Keyboard: React.FC<KeyboardProps> = ({
               onEnter();
             }
           }}
+          inputMode="none"
         />
       </InputContainer>
       {keyRows.map((row) => (

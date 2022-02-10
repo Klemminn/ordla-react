@@ -5,12 +5,16 @@ import { Modal, ModalProps } from "./common";
 import Text from "../Text";
 import { SettingsState } from "states";
 
+const ContentContainer = styled.div`
+  margin-top: 4rem;
+`;
+
 const SettingContainer = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
   border-top: 1px solid grey;
-  height: 4rem;
+  height: 8rem;
 `;
 
 const LabelContainer = styled.div``;
@@ -48,17 +52,20 @@ const SettingsModal: React.FC<ModalProps> = (props) => {
   const { isDarkTheme, isHardMode } = settingsState.get();
   return (
     <Modal {...props} header="Stillingar">
-      <Setting
-        label="Erfiðari útgáfan"
-        description="Notast þarf við alla þekkta stafi"
-        value={isHardMode}
-        onChange={settingsState.setIsHardMode}
-      />
-      <Setting
-        label="Rökkurhamur"
-        value={isDarkTheme}
-        onChange={settingsState.setIsDarkTheme}
-      />
+      <ContentContainer>
+        <Setting
+          label="Erfiðari útgáfan"
+          description="Notast þarf við alla þekkta stafi"
+          value={isHardMode}
+          onChange={settingsState.setIsHardMode}
+        />
+        <Setting
+          label="Myrkrahamur"
+          description="Ljóst á dökkum bakgrunn"
+          value={isDarkTheme}
+          onChange={settingsState.setIsDarkTheme}
+        />
+      </ContentContainer>
     </Modal>
   );
 };

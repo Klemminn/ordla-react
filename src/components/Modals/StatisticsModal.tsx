@@ -7,7 +7,7 @@ import { GameState } from "states";
 import Text from "../Text";
 import { Modal, ModalProps } from "./common";
 import Chart from "./Chart";
-import { getPercentage, getRowStates, toast } from "utils";
+import { getPercentage, getRowStates, getSolution, toast } from "utils";
 import { Colors } from "style";
 import { Icons } from "components";
 
@@ -123,8 +123,7 @@ const StatisticsModal: React.FC<ModalProps> = (props) => {
   };
 
   const handleShare = async () => {
-    const solutions = await require(`data/${wordLength}solutions`);
-    const solution = solutions[daysFromLaunch];
+    const solution = await getSolution(wordLength);
     const usedRows = guesses.filter((guess) => guess.length);
     const rowStrings = usedRows.map((row) =>
       getRowStates(row, solution)

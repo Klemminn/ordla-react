@@ -3,8 +3,8 @@ import { flipTime } from "const";
 import styled from "styled-components";
 
 import { UsedKeysStatus } from "types";
-import { getDaysFromLaunch, toast } from "utils";
-import { GameState } from "states";
+import { getDaysFromLaunch, getRowStates, getSolution, toast } from "utils";
+import { GameState, ModalsState, SettingsState } from "states";
 
 import Header from "./Header";
 import Keyboard from "./Keyboard";
@@ -43,6 +43,7 @@ const congratulationStrings = [
 ];
 
 const Game: React.FC = () => {
+  const { isHardMode } = SettingsState.useState().get();
   const gameState = GameState.useState();
   const currentGame = gameState.getGameState();
   const guesses = currentGame.guesses;
@@ -63,9 +64,8 @@ const Game: React.FC = () => {
 
   const handleWordLengthChange = async (length: number) => {
     allowedWords.current = await require(`data/${length}letter`);
-    const solutions = await require(`data/${length}solutions`);
+    solution.current = await getSolution(wordLength);
     const daysFromLaunch = getDaysFromLaunch();
-    solution.current = solutions[daysFromLaunch];
     if (daysFromLaunch !== stateDaysFromLaunch) {
       gameState.resetGame();
     }
@@ -147,15 +147,64 @@ const Game: React.FC = () => {
     }, 600);
   };
 
+  console.log(solution.current);
+
+  const isHardModeValid = () => {
+    if (isHardMode && guessIndex > 0) {
+      const previousGuess = guesses[guessIndex - 1];
+      const previousGuessStates = getRowStates(previousGuess, solution.current);
+      const missingCorrect = previousGuessStates.findIndex(
+        (state, index) =>
+          state === "correct" && currentGuess[index] !== previousGuess[index]
+      );
+      if (missingCorrect > -1) {
+        toast(
+          `${previousGuess[
+            missingCorrect
+          ].toUpperCase()} var á réttum stað áðan!`
+        );
+        return false;
+      }
+      const missingWrongPlace = previousGuessStates.findIndex(
+        (state, index) => {
+          if (state !== "wrongPlace") {
+            return false;
+          }
+          const previousLetter = previousGuess[index];
+          return !currentGuess
+            .split("")
+            .find(
+              (currentLetter, index) =>
+                currentLetter === previousLetter &&
+                previousGuessStates[index] !== "correct"
+            );
+        }
+      );
+      if (missingWrongPlace > -1) {
+        toast(
+          `Þú verður að nota ${previousGuess[missingWrongPlace].toUpperCase()}`
+        );
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleEnter = () => {
     if (!isFinished) {
       if (currentGuess.length === wordLength) {
+        if (!isHardModeValid()) {
+          return;
+        }
         if (allowedWords.current.includes(currentGuess)) {
           if (currentGuess === solution.current) {
             runAfterFlip(() => toast(congratulationStrings[guessIndex]));
             gameState.updateStatistics(
               (guessIndex + 1) as GameState.NumberOfGuesses
             );
+            setTimeout(() => {
+              ModalsState.accessState().openModal("statistics");
+            }, 5000);
           } else if (guessIndex === guesses.length - 1) {
             toast(solution.current.toUpperCase());
             gameState.updateStatistics("failed");

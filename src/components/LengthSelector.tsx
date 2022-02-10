@@ -8,6 +8,7 @@ const allowedLengths = [5, 6, 7];
 const Container = styled.div`
   display: flex;
   justify-content: space-between;
+  margin: 0 1rem;
 `;
 
 type ButtonProps = {
