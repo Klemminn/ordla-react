@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 
-import { createArray, getRowStates } from "utils";
+import { getRowStates } from "utils";
 import { KeyStatus } from "types";
 
 import Tile from "./Tile";
@@ -54,7 +54,7 @@ const TileRow: React.FC<TileRowProps> = ({
   const [tileStates, setTileStates] = useState(["default"]);
 
   useEffect(() => {
-    setTileStates(createArray(solution.length).map(() => "default"));
+    setTileStates(solution.split("").map(() => "default"));
   }, [solution]);
 
   useEffect(() => {

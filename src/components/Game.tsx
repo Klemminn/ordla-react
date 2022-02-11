@@ -3,7 +3,13 @@ import { flipTime } from "const";
 import styled from "styled-components";
 
 import { UsedKeysStatus } from "types";
-import { getDaysFromLaunch, getRowStates, getSolution, toast } from "utils";
+import {
+  getAllowedWords,
+  getDaysFromLaunch,
+  getRowStates,
+  getTotalFlipTime,
+  toast,
+} from "utils";
 import { GameState, ModalsState, SettingsState } from "states";
 
 import Header from "./Header";
@@ -46,35 +52,30 @@ const Game: React.FC = () => {
   const { isHardMode } = SettingsState.useState().get();
   const gameState = GameState.useState();
   const currentGame = gameState.getGameState();
-  const guesses = currentGame.guesses;
-  const isFinished = currentGame.isFinished;
+  const { guesses, solution, isFinished } = currentGame;
   const wordLength = gameState.getWordLength();
   const stateDaysFromLaunch = gameState.getDaysFromLaunch();
-  const solution = useRef("");
-  const allowedWords = useRef<string[]>([]);
+  const allowedWords = getAllowedWords(wordLength);
   const [usedKeyStatus, setUsedKeyStatus] = useState(defaultUsedKeyStatus);
-  const [guessIndex, setGuessIndex] = useState(0);
+  const firstEmptyGuess = guesses.findIndex((guess) => !guess.length);
+  const guessIndex =
+    firstEmptyGuess > -1 ? firstEmptyGuess : guesses.length + 1;
   const [shake, setShake] = useState(false);
-  const currentGuess = guesses[guessIndex];
+  const [currentGuess, setCurrentGuess] = useState(guesses[guessIndex]);
+  const afterFlipTimeoutRef = useRef<null | ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
-    handleWordLengthChange(wordLength);
-    // eslint-disable-next-line
-  }, [wordLength]);
-
-  const handleWordLengthChange = async (length: number) => {
-    allowedWords.current = await require(`data/${length}letter`);
-    solution.current = await getSolution(wordLength);
     const daysFromLaunch = getDaysFromLaunch();
     if (daysFromLaunch !== stateDaysFromLaunch) {
       gameState.resetGame();
     }
-    const index = guesses.findIndex(
-      (guess) => !allowedWords.current.includes(guess)
-    );
-    setGuessIndex(index >= 0 ? index : guesses.length);
+    setCurrentGuess("");
     setKeyStatuses();
-  };
+    if (afterFlipTimeoutRef.current) {
+      clearTimeout(afterFlipTimeoutRef.current);
+    }
+    // eslint-disable-next-line
+  }, [wordLength]);
 
   const setKeyStatuses = () => {
     const correct = guesses.reduce(
@@ -84,8 +85,7 @@ const Game: React.FC = () => {
           .split("")
           .filter(
             (letter, index) =>
-              !accumulated.includes(letter) &&
-              letter === solution.current[index]
+              !accumulated.includes(letter) && letter === solution[index]
           ),
       ],
       [] as string[]
@@ -98,7 +98,7 @@ const Game: React.FC = () => {
           .filter(
             (letter) =>
               !accumulated.includes(letter) &&
-              solution.current.includes(letter) &&
+              solution.includes(letter) &&
               !correct.includes(letter)
           ),
       ],
@@ -111,8 +111,7 @@ const Game: React.FC = () => {
           .split("")
           .filter(
             (letter) =>
-              !accumulated.includes(letter) &&
-              !solution.current.includes(letter)
+              !accumulated.includes(letter) && !solution.includes(letter)
           ),
       ],
       [] as string[]
@@ -122,21 +121,14 @@ const Game: React.FC = () => {
 
   const handleGuessChange = (guess: string) => {
     if (!isFinished && guess.length <= wordLength) {
-      const updated = [...guesses];
-      updated[guessIndex] = guess;
-      gameState.setGuesses(updated);
+      setCurrentGuess(guess);
     }
   };
 
   const runAfterFlip = (callback: Function) => {
-    setTimeout(() => {
+    afterFlipTimeoutRef.current = setTimeout(() => {
       callback();
-    }, flipTime * 1000 * (wordLength - 1));
-  };
-
-  const updateGuessStatus = () => {
-    setGuessIndex(guessIndex + 1);
-    runAfterFlip(setKeyStatuses);
+    }, getTotalFlipTime(wordLength));
   };
 
   const handleFailure = (message: string) => {
@@ -150,7 +142,7 @@ const Game: React.FC = () => {
   const isHardModeValid = () => {
     if (isHardMode && guessIndex > 0) {
       const previousGuess = guesses[guessIndex - 1];
-      const previousGuessStates = getRowStates(previousGuess, solution.current);
+      const previousGuessStates = getRowStates(previousGuess, solution);
       const missingCorrect = previousGuessStates.findIndex(
         (state, index) =>
           state === "correct" && currentGuess[index] !== previousGuess[index]
@@ -194,8 +186,8 @@ const Game: React.FC = () => {
         if (!isHardModeValid()) {
           return;
         }
-        if (allowedWords.current.includes(currentGuess)) {
-          if (currentGuess === solution.current) {
+        if (allowedWords.includes(currentGuess)) {
+          if (currentGuess === solution) {
             runAfterFlip(() => toast(congratulationStrings[guessIndex]));
             gameState.updateStatistics(
               (guessIndex + 1) as GameState.NumberOfGuesses
@@ -204,10 +196,14 @@ const Game: React.FC = () => {
               ModalsState.accessState().openModal("statistics");
             }, 5000);
           } else if (guessIndex === guesses.length - 1) {
-            toast(solution.current.toUpperCase());
+            toast(solution.toUpperCase());
             gameState.updateStatistics("failed");
           }
-          updateGuessStatus();
+          const updated = [...guesses];
+          updated[guessIndex] = currentGuess;
+          gameState.addGuess(currentGuess);
+          setCurrentGuess("");
+          runAfterFlip(setKeyStatuses);
         } else {
           handleFailure(
             `${currentGuess.toUpperCase()} er ekki í orðaforðanum okkar`
@@ -227,10 +223,10 @@ const Game: React.FC = () => {
         {guesses.map((guess, index) => (
           <TileRow
             flipped={guessIndex > index}
-            letters={guess}
-            solution={solution.current}
+            letters={index === guessIndex ? currentGuess : guess}
+            solution={solution}
             shake={guessIndex === index && shake}
-            key={`${solution.current}${index}`}
+            key={`${wordLength}-${index}`}
           />
         ))}
       </GuessContainer>

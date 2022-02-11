@@ -1,6 +1,7 @@
 import { createState, useState as useHookState, State } from "@hookstate/core";
 import { Persistence } from "@hookstate/persistence";
-import { getDaysFromLaunch } from "utils";
+import { mergeDeepLeft } from "ramda";
+import { getDaysFromLaunch, getSolution } from "utils";
 
 export type Statistics = {
   currentStreak: number;
@@ -22,6 +23,7 @@ type LengthState = {
   isFinished: boolean;
   correctGuess: number;
   guesses: string[];
+  solution: string;
   statistics: Statistics;
 };
 
@@ -38,10 +40,11 @@ export type GameState = {
 
 const getDefaultGuesses = () => ["", "", "", "", "", ""];
 
-const getDefaultLengthState = (): LengthState => ({
+const getDefaultLengthState = (wordLength: number): LengthState => ({
   isFinished: false,
   correctGuess: -1,
   guesses: getDefaultGuesses(),
+  solution: getSolution(wordLength),
   statistics: {
     currentStreak: 0,
     maxStreak: 0,
@@ -62,20 +65,29 @@ const getDefaultLengthState = (): LengthState => ({
 const getDefaultState = (): GameState => ({
   wordLength: 5,
   daysFromLaunch: 0,
-  5: getDefaultLengthState(),
-  6: getDefaultLengthState(),
-  7: getDefaultLengthState(),
+  5: getDefaultLengthState(5),
+  6: getDefaultLengthState(6),
+  7: getDefaultLengthState(7),
 });
 
-const getResetLengthState = (lengthState: LengthState) => ({
+const getResetLengthState = (lengthState: LengthState, wordLength: number) => ({
   ...lengthState,
+  solution: getSolution(wordLength),
   isFinished: false,
   correctGuess: -1,
   guesses: getDefaultGuesses(),
 });
 
-const gameState = createState<GameState>(getDefaultState());
 const persistenceStateKey = "gameState";
+const fixUpdatedState = () => {
+  const current = JSON.parse(localStorage.getItem(persistenceStateKey) ?? "{}");
+  const defaultState = getDefaultState();
+  const merged = JSON.stringify(mergeDeepLeft(current, defaultState));
+  localStorage.setItem(persistenceStateKey, merged);
+};
+fixUpdatedState();
+
+const gameState = createState<GameState>(getDefaultState());
 gameState.attach(Persistence(persistenceStateKey));
 
 const wrapState = (s: State<GameState>) => ({
@@ -90,16 +102,24 @@ const wrapState = (s: State<GameState>) => ({
     const daysFromLaunch = getDaysFromLaunch();
     const clone = JSON.parse(JSON.stringify(s.value));
     clone.daysFromLaunch = daysFromLaunch;
-    clone.currentStreak = 0;
-    clone["5"] = getResetLengthState(clone["5"]);
-    clone["6"] = getResetLengthState(clone["6"]);
-    clone["7"] = getResetLengthState(clone["7"]);
+    clone["5"] = getResetLengthState(clone["5"], 5);
+    clone["6"] = getResetLengthState(clone["6"], 6);
+    clone["7"] = getResetLengthState(clone["7"], 7);
     s.set(clone);
   },
-  setGuesses: (guesses: LengthState["guesses"]) =>
-    s.merge((current) => ({
-      [s.value.wordLength]: { ...current[s.value.wordLength], guesses },
-    })),
+  addGuess: (guess: string) =>
+    s.merge((current) => {
+      const wordLength = s.value.wordLength;
+      const guesses = JSON.parse(
+        JSON.stringify(current[wordLength].guesses)
+      ) as string[];
+      const nextIndex = guesses.findIndex((guess) => !guess.length);
+      guesses[nextIndex] = guess;
+
+      return {
+        [wordLength]: { ...current[wordLength], guesses },
+      };
+    }),
   updateStatistics: (
     numberOfGuesses: keyof LengthState["statistics"]["numberOfGuesses"]
   ) =>

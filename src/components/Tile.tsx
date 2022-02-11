@@ -4,7 +4,7 @@ import CardFlip from "react-card-flip";
 
 import { Colors } from "style";
 import { KeyStatus } from "types";
-import { flipTime } from "const";
+import { flipTime, flipDelay } from "const";
 
 import Text from "./Text";
 
@@ -82,8 +82,6 @@ type TileProps = {
   bounce: boolean;
   wordLength: number;
 };
-
-const flipDelay = flipTime ** 3 * 1000;
 
 const Tile: React.FC<TileProps> = ({
   index,

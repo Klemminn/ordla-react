@@ -1,7 +1,6 @@
 import reactHotToast from "react-hot-toast";
-
-export const createArray = (length: number) =>
-  Array(length).join(".").split(".");
+import * as Data from "data";
+import { flipDelay, flipTime } from "const";
 
 const LAUNCH_MILLISECONDS = 1644451200000;
 
@@ -45,10 +44,15 @@ export const getRowStates = (row: string, solution: string) => {
     });
 };
 
-export const getSolution = async (wordLength: number) => {
+export const getAllowedWords = (wordLength: number) => {
+  const words = Data[`words${wordLength}` as keyof typeof Data];
+  return words;
+};
+
+export const getSolution = (wordLength: number) => {
   const daysFromLaunch = getDaysFromLaunch();
-  const solutions = await require(`data/${wordLength}solutions`);
-  return solutions[daysFromLaunch % solutions.length];
+  const solutions = Data[`solutions${wordLength}` as keyof typeof Data];
+  return solutions[daysFromLaunch % solutions.length] ?? solutions[0];
 };
 
 export const isMobile = () => {
@@ -72,3 +76,6 @@ export const isMobile = () => {
   }
   return checker;
 };
+
+export const getTotalFlipTime = (wordLength: number) =>
+  flipDelay * wordLength + flipTime;
