@@ -62,7 +62,12 @@ const Game: React.FC = () => {
     firstEmptyGuess > -1 ? firstEmptyGuess : guesses.length + 1;
   const [shake, setShake] = useState(false);
   const [currentGuess, setCurrentGuess] = useState(guesses[guessIndex]);
-  const afterFlipTimeoutRef = useRef<null | ReturnType<typeof setTimeout>>();
+  const timeoutRefs = useRef<number[]>([]);
+
+  const addTimeout = (callback: TimerHandler, timeout: number) => {
+    const timeoutHandler = setTimeout(callback, timeout);
+    timeoutRefs.current.push(timeoutHandler);
+  };
 
   useEffect(() => {
     const daysFromLaunch = getDaysFromLaunch();
@@ -71,9 +76,9 @@ const Game: React.FC = () => {
     }
     setCurrentGuess("");
     setKeyStatuses();
-    if (afterFlipTimeoutRef.current) {
-      clearTimeout(afterFlipTimeoutRef.current);
-    }
+
+    timeoutRefs.current.forEach((timeout) => clearTimeout(timeout));
+    timeoutRefs.current = [];
     // eslint-disable-next-line
   }, [wordLength]);
 
@@ -126,7 +131,7 @@ const Game: React.FC = () => {
   };
 
   const runAfterFlip = (callback: Function) => {
-    afterFlipTimeoutRef.current = setTimeout(() => {
+    addTimeout(() => {
       callback();
     }, getTotalFlipTime(wordLength));
   };
@@ -192,7 +197,7 @@ const Game: React.FC = () => {
             gameState.updateStatistics(
               (guessIndex + 1) as GameState.NumberOfGuesses
             );
-            setTimeout(() => {
+            addTimeout(() => {
               ModalsState.accessState().openModal("statistics");
             }, 5000);
           } else if (guessIndex === guesses.length - 1) {
