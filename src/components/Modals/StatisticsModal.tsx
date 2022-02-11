@@ -7,7 +7,13 @@ import { GameState } from "states";
 import Text from "../Text";
 import { Modal, ModalProps } from "./common";
 import Chart from "./Chart";
-import { getPercentage, getRowStates, getSolution, toast } from "utils";
+import {
+  getPercentage,
+  getRowStates,
+  getSolution,
+  isMobile,
+  toast,
+} from "utils";
 import { Colors } from "style";
 import { Icons } from "components";
 
@@ -143,7 +149,8 @@ const StatisticsModal: React.FC<ModalProps> = (props) => {
       text: whole,
       url: footer,
     };
-    if (navigator.canShare()) {
+    console.log(isMobile());
+    if (isMobile() && navigator.canShare(shareData)) {
       navigator.share(shareData);
     } else {
       navigator.clipboard.writeText(whole);

@@ -50,3 +50,25 @@ export const getSolution = async (wordLength: number) => {
   const solutions = await require(`data/${wordLength}solutions`);
   return solutions[daysFromLaunch % solutions.length];
 };
+
+export const isMobile = () => {
+  let checker = false;
+  if ("maxTouchPoints" in navigator) {
+    checker = navigator.maxTouchPoints > 0;
+  } else if ("msMaxTouchPoints" in navigator) {
+    checker = navigator.maxTouchPoints > 0;
+  } else {
+    var mQ = window.matchMedia?.("(pointer:coarse)");
+    if (mQ && mQ.media === "(pointer:coarse)") {
+      checker = !!mQ.matches;
+    } else if ("orientation" in window) {
+      checker = true;
+    } else {
+      var UA = navigator.userAgent;
+      checker =
+        /\b(BlackBerry|webOS|iPhone|IEMobile)\b/i.test(UA) ||
+        /\b(Android|Windows Phone|iPad|iPod)\b/i.test(UA);
+    }
+  }
+  return checker;
+};
