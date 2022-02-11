@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { flipTime } from "const";
 import styled from "styled-components";
 
 import { UsedKeysStatus } from "types";
@@ -185,6 +184,12 @@ const Game: React.FC = () => {
     return true;
   };
 
+  const openDelayedStatistics = () => {
+    addTimeout(() => {
+      ModalsState.accessState().openModal("statistics");
+    }, 4000);
+  };
+
   const handleEnter = () => {
     if (!isFinished) {
       if (currentGuess.length === wordLength) {
@@ -197,11 +202,12 @@ const Game: React.FC = () => {
             gameState.updateStatistics(
               (guessIndex + 1) as GameState.NumberOfGuesses
             );
-            addTimeout(() => {
-              ModalsState.accessState().openModal("statistics");
-            }, 5000);
+            openDelayedStatistics();
           } else if (guessIndex === guesses.length - 1) {
-            toast(solution.toUpperCase());
+            runAfterFlip(() => {
+              toast(solution.toUpperCase(), 4000);
+              openDelayedStatistics();
+            });
             gameState.updateStatistics("failed");
           }
           const updated = [...guesses];

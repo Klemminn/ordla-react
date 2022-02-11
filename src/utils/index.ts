@@ -16,8 +16,8 @@ export const getDaysFromLaunch = () => {
 export const getPercentage = (part: number, total: number) =>
   total === 0 ? 0 : Math.ceil((part * 100) / total);
 
-export const toast = (message: string) =>
-  reactHotToast(message, { duration: 2500 });
+export const toast = (message: string, duration: number = 2500) =>
+  reactHotToast(message, { duration });
 
 export const getRowStates = (row: string, solution: string) => {
   let parsedWord = solution;
