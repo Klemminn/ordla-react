@@ -7,11 +7,13 @@ import {
   cancelTimeouts,
   getAllowedWords,
   getDaysFromLaunch,
+  getKeyStatuses,
   getRowStates,
   getTotalFlipTime,
+  openDelayedStatistics,
   toast,
 } from "utils";
-import { GameState, ModalsState, SettingsState } from "states";
+import { GameState, SettingsState } from "states";
 
 import Header from "./Header";
 import Keyboard from "./Keyboard";
@@ -76,45 +78,8 @@ const Game: React.FC = () => {
   }, [wordLength]);
 
   const setKeyStatuses = () => {
-    const correct = guesses.reduce(
-      (accumulated, guess) => [
-        ...accumulated,
-        ...guess
-          .split("")
-          .filter(
-            (letter, index) =>
-              !accumulated.includes(letter) && letter === solution[index]
-          ),
-      ],
-      [] as string[]
-    );
-    const wrongPlace = guesses.reduce(
-      (accumulated, guess) => [
-        ...accumulated,
-        ...guess
-          .split("")
-          .filter(
-            (letter) =>
-              !accumulated.includes(letter) &&
-              solution.includes(letter) &&
-              !correct.includes(letter)
-          ),
-      ],
-      [] as string[]
-    );
-    const incorrect = guesses.reduce(
-      (accumulated, guess) => [
-        ...accumulated,
-        ...guess
-          .split("")
-          .filter(
-            (letter) =>
-              !accumulated.includes(letter) && !solution.includes(letter)
-          ),
-      ],
-      [] as string[]
-    );
-    setUsedKeyStatus({ correct, wrongPlace, incorrect });
+    const keyStatuses = getKeyStatuses(solution, guesses);
+    setUsedKeyStatus(keyStatuses);
   };
 
   const handleGuessChange = (guess: string) => {
@@ -176,12 +141,6 @@ const Game: React.FC = () => {
       }
     }
     return true;
-  };
-
-  const openDelayedStatistics = () => {
-    addTimeout(() => {
-      ModalsState.accessState().openModal("statistics");
-    }, 4000);
   };
 
   const handleEnter = () => {

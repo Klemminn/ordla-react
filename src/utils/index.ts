@@ -1,5 +1,8 @@
 import reactHotToast from "react-hot-toast";
+
 import * as Data from "data";
+import * as ModalsState from "states/ModalsState";
+
 import { flipDelay, flipTime } from "const";
 
 const LAUNCH_MILLISECONDS = 1644451200000;
@@ -55,26 +58,72 @@ export const getSolution = (wordLength: number) => {
   return solutions[daysFromLaunch % solutions.length] ?? solutions[0];
 };
 
+export const getKeyStatuses = (solution: string, guesses: string[]) => {
+  const correct = guesses.reduce(
+    (accumulated, guess) => [
+      ...accumulated,
+      ...guess
+        .split("")
+        .filter(
+          (letter, index) =>
+            !accumulated.includes(letter) && letter === solution[index]
+        ),
+    ],
+    [] as string[]
+  );
+  const wrongPlace = guesses.reduce(
+    (accumulated, guess) => [
+      ...accumulated,
+      ...guess
+        .split("")
+        .filter(
+          (letter) =>
+            !accumulated.includes(letter) &&
+            solution.includes(letter) &&
+            !correct.includes(letter)
+        ),
+    ],
+    [] as string[]
+  );
+  const incorrect = guesses.reduce(
+    (accumulated, guess) => [
+      ...accumulated,
+      ...guess
+        .split("")
+        .filter(
+          (letter) =>
+            !accumulated.includes(letter) && !solution.includes(letter)
+        ),
+    ],
+    [] as string[]
+  );
+  return { correct, wrongPlace, incorrect };
+};
+
+export const openDelayedStatistics = () => {
+  addTimeout(() => {
+    ModalsState.accessState().openModal("statistics");
+  }, 4000);
+};
+
 export const isMobile = () => {
-  let checker = false;
+  let isMobileDevice = false;
   if ("maxTouchPoints" in navigator) {
-    checker = navigator.maxTouchPoints > 0;
-  } else if ("msMaxTouchPoints" in navigator) {
-    checker = navigator.maxTouchPoints > 0;
+    isMobileDevice = navigator.maxTouchPoints > 0;
   } else {
-    var mQ = window.matchMedia?.("(pointer:coarse)");
-    if (mQ && mQ.media === "(pointer:coarse)") {
-      checker = !!mQ.matches;
+    var mediaQuery = window.matchMedia?.("(pointer:coarse)");
+    if (mediaQuery?.media === "(pointer:coarse)") {
+      isMobileDevice = !!mediaQuery.matches;
     } else if ("orientation" in window) {
-      checker = true;
+      isMobileDevice = true;
     } else {
-      var UA = navigator.userAgent;
-      checker =
-        /\b(BlackBerry|webOS|iPhone|IEMobile)\b/i.test(UA) ||
-        /\b(Android|Windows Phone|iPad|iPod)\b/i.test(UA);
+      var userAgent = navigator.userAgent;
+      isMobileDevice =
+        /\b(BlackBerry|webOS|iPhone|IEMobile)\b/i.test(userAgent) ||
+        /\b(Android|Windows Phone|iPad|iPod)\b/i.test(userAgent);
     }
   }
-  return checker;
+  return isMobileDevice;
 };
 
 export const getTotalFlipTime = (wordLength: number) =>
