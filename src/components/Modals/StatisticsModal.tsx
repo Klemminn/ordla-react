@@ -143,13 +143,13 @@ const StatisticsModal: React.FC<ModalProps> = (props) => {
     );
     const title = `Orðla ${daysFromLaunch + 1} ${usedRows.length}/6`;
     const footer = "https://ordla.is";
-    const whole = `${title}\n\n${rowStrings.join("\n")}\n\n${footer}`;
+    const titleRows = `${title}\n\n${rowStrings.join("\n")}`;
+    const whole = `${titleRows}\n\n${footer}`;
     const shareData: ShareData = {
       title,
-      text: whole,
+      text: titleRows,
       url: footer,
     };
-    console.log(isMobile());
     if (isMobile() && navigator.canShare(shareData)) {
       navigator.share(shareData);
     } else {
