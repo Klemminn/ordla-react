@@ -7,13 +7,7 @@ import { GameState } from "states";
 import Text from "../Text";
 import { Modal, ModalProps } from "./common";
 import Chart from "./Chart";
-import {
-  getPercentage,
-  getRowStates,
-  getSolution,
-  isMobile,
-  toast,
-} from "utils";
+import { getPercentage, getRowStates, isMobile, toast } from "utils";
 import { Colors } from "style";
 import { Icons } from "components";
 
@@ -119,7 +113,7 @@ const StatisticsModal: React.FC<ModalProps> = (props) => {
   const [midnight, setMidnight] = useState(new Date().setHours(24, 0, 0));
   const gameState = GameState.useState();
   const daysFromLaunch = gameState.getDaysFromLaunch();
-  const { statistics, correctGuess, isFinished, guesses } =
+  const { statistics, correctGuess, isFinished, guesses, solution } =
     gameState.getGameState();
   const wordLength = gameState.getWordLength();
 
@@ -129,7 +123,6 @@ const StatisticsModal: React.FC<ModalProps> = (props) => {
   };
 
   const handleShare = () => {
-    const solution = getSolution(wordLength);
     const usedRows = guesses.filter((guess) => guess.length);
     const rowStrings = usedRows.map((row) =>
       getRowStates(row, solution)
@@ -141,7 +134,9 @@ const StatisticsModal: React.FC<ModalProps> = (props) => {
         )
         .join("")
     );
-    const title = `Orðla ${daysFromLaunch + 1} ${usedRows.length}/6`;
+    const title = `Orðla ${daysFromLaunch + 1} ${
+      correctGuess > -1 ? correctGuess : "X"
+    }/6`;
     const footer = "https://ordla.is";
     const titleRows = `${title}\n\n${rowStrings.join("\n")}\n`;
     const whole = `${titleRows}\n${footer}`;

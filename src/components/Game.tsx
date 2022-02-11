@@ -61,8 +61,7 @@ const Game: React.FC = () => {
   const stateDaysFromLaunch = gameState.getDaysFromLaunch();
   const [usedKeyStatus, setUsedKeyStatus] = useState(defaultUsedKeyStatus);
   const firstEmptyGuess = guesses.findIndex((guess) => !guess.length);
-  const guessIndex =
-    firstEmptyGuess > -1 ? firstEmptyGuess : guesses.length + 1;
+  const guessIndex = firstEmptyGuess > -1 ? firstEmptyGuess : guesses.length;
   const [shake, setShake] = useState(false);
   const [currentGuess, setCurrentGuess] = useState(guesses[guessIndex]);
 

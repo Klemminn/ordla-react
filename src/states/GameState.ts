@@ -1,6 +1,7 @@
 import { createState, useState as useHookState, State } from "@hookstate/core";
 import { Persistence } from "@hookstate/persistence";
 import { mergeDeepLeft } from "ramda";
+
 import { getDaysFromLaunch, getSolution } from "utils";
 
 export type Statistics = {
@@ -91,11 +92,10 @@ const gameState = createState<GameState>(getDefaultState());
 gameState.attach(Persistence(persistenceStateKey));
 
 const wrapState = (s: State<GameState>) => ({
-  getGameState: () => s.value[s.value.wordLength],
+  getGameState: (length: GameState["wordLength"] = s.value.wordLength) =>
+    s.value[length],
   getWordLength: () => s.value.wordLength,
   getDaysFromLaunch: () => s.value.daysFromLaunch,
-  getIsFinished: (length: GameState["wordLength"]) =>
-    s.value[length].isFinished,
 
   setWordLength: s.wordLength.set,
   resetGame: () => {

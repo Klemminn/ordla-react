@@ -12,7 +12,7 @@ const Container = styled.div`
 `;
 
 type ButtonProps = {
-  finished: boolean;
+  gameLengthState: "win" | "lost" | "default";
   selected: boolean;
 };
 
@@ -22,8 +22,14 @@ const Button = styled.button<ButtonProps>`
   height: 4rem;
   border: none;
   border-radius: 0.5rem;
-  background-color: ${({ finished, selected, theme }) =>
-    finished ? Colors.Success : selected ? theme.tone2 : theme.tone5};
+  background-color: ${({ gameLengthState, selected, theme }) =>
+    gameLengthState === "win"
+      ? Colors.Success
+      : gameLengthState === "lost"
+      ? Colors.Fail
+      : selected
+      ? theme.tone2
+      : theme.tone5};
 `;
 
 const LengthSelector: React.FC = () => {
@@ -32,14 +38,16 @@ const LengthSelector: React.FC = () => {
   return (
     <Container>
       {allowedLengths.map((length) => {
-        const finished = gameState.getIsFinished(
+        const { isFinished, correctGuess } = gameState.getGameState(
           length as typeof currentWordLength
         );
         const selected = length === currentWordLength;
         return (
           <Button
             selected={selected}
-            finished={finished}
+            gameLengthState={
+              correctGuess > -1 ? "win" : isFinished ? "lost" : "default"
+            }
             onClick={() =>
               gameState.setWordLength(length as typeof currentWordLength)
             }
@@ -47,7 +55,7 @@ const LengthSelector: React.FC = () => {
           >
             <Text
               weight={selected ? 600 : 400}
-              color={selected || finished ? Colors.White : undefined}
+              color={selected || isFinished ? Colors.White : undefined}
             >
               {length} stafir
             </Text>
