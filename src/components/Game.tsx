@@ -37,9 +37,9 @@ const GuessContainer = styled.div`
 `;
 
 const defaultUsedKeyStatus: UsedKeysStatus = {
-  correct: [] as string[],
-  wrongPlace: [] as string[],
-  incorrect: [] as string[],
+  correct: [],
+  wrongPlace: [],
+  incorrect: [],
 };
 
 const congratulationStrings = [
