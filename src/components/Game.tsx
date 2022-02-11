@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 
 import { UsedKeysStatus } from "types";
 import {
+  addTimeout,
+  cancelTimeouts,
   getAllowedWords,
   getDaysFromLaunch,
   getRowStates,
@@ -52,21 +54,15 @@ const Game: React.FC = () => {
   const gameState = GameState.useState();
   const currentGame = gameState.getGameState();
   const { guesses, solution, isFinished } = currentGame;
-  const wordLength = gameState.getWordLength();
-  const stateDaysFromLaunch = gameState.getDaysFromLaunch();
+  const wordLength = solution.length;
   const allowedWords = getAllowedWords(wordLength);
+  const stateDaysFromLaunch = gameState.getDaysFromLaunch();
   const [usedKeyStatus, setUsedKeyStatus] = useState(defaultUsedKeyStatus);
   const firstEmptyGuess = guesses.findIndex((guess) => !guess.length);
   const guessIndex =
     firstEmptyGuess > -1 ? firstEmptyGuess : guesses.length + 1;
   const [shake, setShake] = useState(false);
   const [currentGuess, setCurrentGuess] = useState(guesses[guessIndex]);
-  const timeoutRefs = useRef<number[]>([]);
-
-  const addTimeout = (callback: TimerHandler, timeout: number) => {
-    const timeoutHandler = setTimeout(callback, timeout);
-    timeoutRefs.current.push(timeoutHandler);
-  };
 
   useEffect(() => {
     const daysFromLaunch = getDaysFromLaunch();
@@ -75,9 +71,7 @@ const Game: React.FC = () => {
     }
     setCurrentGuess("");
     setKeyStatuses();
-
-    timeoutRefs.current.forEach((timeout) => clearTimeout(timeout));
-    timeoutRefs.current = [];
+    cancelTimeouts();
     // eslint-disable-next-line
   }, [wordLength]);
 

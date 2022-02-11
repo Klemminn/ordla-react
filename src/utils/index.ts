@@ -79,3 +79,14 @@ export const isMobile = () => {
 
 export const getTotalFlipTime = (wordLength: number) =>
   flipDelay * wordLength + flipTime;
+
+let timeoutIds: number[] = [];
+export const addTimeout = (callback: TimerHandler, timeout: number) => {
+  const timeoutId = setTimeout(callback, timeout);
+  timeoutIds.push(timeoutId);
+};
+
+export const cancelTimeouts = () => {
+  timeoutIds.forEach((timeout) => clearTimeout(timeout));
+  timeoutIds = [];
+};

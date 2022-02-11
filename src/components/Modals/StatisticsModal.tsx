@@ -128,8 +128,8 @@ const StatisticsModal: React.FC<ModalProps> = (props) => {
     gameState.resetGame();
   };
 
-  const handleShare = async () => {
-    const solution = await getSolution(wordLength);
+  const handleShare = () => {
+    const solution = getSolution(wordLength);
     const usedRows = guesses.filter((guess) => guess.length);
     const rowStrings = usedRows.map((row) =>
       getRowStates(row, solution)
