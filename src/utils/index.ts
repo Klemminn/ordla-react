@@ -103,7 +103,7 @@ export const getKeyStatuses = (solution: string, guesses: string[]) => {
 export const openDelayedStatistics = () => {
   addTimeout(() => {
     ModalsState.accessState().openModal("statistics");
-  }, 4000);
+  }, 8000);
 };
 
 export const isMobile = () => {
