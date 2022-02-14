@@ -64,12 +64,14 @@ const Game: React.FC = () => {
   const guessIndex = firstEmptyGuess > -1 ? firstEmptyGuess : guesses.length;
   const [shake, setShake] = useState(false);
   const [currentGuess, setCurrentGuess] = useState(guesses[guessIndex]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const daysFromLaunch = getDaysFromLaunch();
     if (daysFromLaunch !== stateDaysFromLaunch) {
       gameState.resetGame();
     }
+    setIsLoading(false);
     setCurrentGuess("");
     setKeyStatuses();
     cancelTimeouts();
@@ -178,7 +180,7 @@ const Game: React.FC = () => {
     }
   };
 
-  return (
+  return isLoading ? null : (
     <GameContainer>
       <Header />
       <LengthSelector />
