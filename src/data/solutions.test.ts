@@ -61,3 +61,26 @@ test("solutions are of correct length", () => {
     expect(solutionsAreCorrectLength(solutions, length)).toBeTruthy();
   });
 });
+
+const solutionsAreSingular = (solutions: string[]) => {
+  const solutionCounts = solutions.reduce((counts, solution) => {
+    counts[solution] = (counts[solution] || 0) + 1;
+    return counts;
+  }, {} as Record<(typeof solutions)[number], number>);
+
+  const duplicateSolutions = Object.keys(solutionCounts).filter(
+    (solution) => solutionCounts[solution] > 1
+  );
+
+  if (duplicateSolutions.length) {
+    console.log("These solutions appear more than once:", duplicateSolutions);
+  }
+
+  return duplicateSolutions.length === 0;
+};
+
+test("solutions are singular", () => {
+  letterLengthMaps.forEach(({ solutions }) => {
+    expect(solutionsAreSingular(solutions)).toBeTruthy();
+  });
+});
